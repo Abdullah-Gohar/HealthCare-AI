@@ -1,131 +1,110 @@
-## Healthcare AI - Transcription and Translation Service
 
-This project provides an API for transcribing and translating audio files. It utilizes OpenAI's Whisper model for transcription and GPT for translation. The service can be used to transcribe audio recordings and translate the transcriptions into a specified target language.
+---
 
-## Features
+# **HealthCare AI: Medical Translation and Transcription App**
 
-* **Audio Transcription:** Converts spoken audio into text using OpenAI's Whisper API.
-* **Text Translation:** Translates the transcribed text into a target language using OpenAI's GPT API.
-* **CORS Support:** Supports cross-origin requests for use in web applications.
-* **Supports Multiple Languages:** You can specify the target language for translation (default is Spanish).
+This project is a full-stack web application that allows users to record speech, transcribe it, translate it into a target language, and then play the translation as audio. The application consists of a **frontend** (HTML, CSS, JavaScript) and a **backend** (Flask API). The backend is responsible for handling audio processing, transcription, translation, and text-to-speech (TTS).
 
-## Installation
+## **Table of Contents**
+1. [Code Documentation](#code-documentation)
+   - [Frontend Structure](#frontend-structure)
+   - [Backend Structure](#backend-structure)
+   - [AI Tools](#ai-tools)
+   - [Security Considerations](#security-considerations)
+2. [User Guide](#user-guide)
+   - [Features](#features)
+   - [Running the Application](#running-the-application)
+3. [License](#license)
 
-### Requirements
+---
 
-* Python 3.7+
-* OpenAI API Key
-* Flask for the web server
+## **Code Documentation**
 
-### Step 1: Clone the repository
+### **Frontend Structure**
+The frontend handles user interactions, such as starting and stopping the recording, displaying transcriptions and translations, and playing the audio translation.
 
-```bash
-git clone https://github.com/yourusername/healthcare-ai.git
-cd healthcare-ai
-```
+- **HTML (index.html)**: Contains the structure of the webpage, including input fields for transcriptions, translations, and buttons for interaction (Record, Stop, Speak).
+- **CSS (style.css)**: Styles the layout of the page, ensuring the app is visually appealing and responsive.
+- **JavaScript (script.js)**: Manages the logic for recording audio, displaying transcriptions and translations, and playing audio from the backend.
 
-### Step 2: Install dependencies
+### **Backend Structure**
+The backend is built using **Flask**, a lightweight Python web framework, and handles the following operations:
 
-Make sure you have pip installed, then install the required packages by running:
+- **Audio Transcription** using **OpenAI’s Whisper API**.
+- **Text Translation** using **OpenAI GPT-4 or GPT-3.5 models**.
+- **Text-to-Speech (TTS)** conversion using **gTTS (Google Text-to-Speech)**.
 
-```bash
-pip install -r requirements.txt
-```
+#### **Backend Files**
+1. **app.py**: 
+   - Contains the Flask application that exposes API routes to handle the transcription, translation, and text-to-speech operations.
+   - **/transcribe-and-translate**: Accepts audio data, transcribes it using OpenAI’s Whisper model, and translates the transcription into the target language using OpenAI models.
+   - **/speak-translation**: Accepts translated text and returns the corresponding audio.
 
-This will install the necessary dependencies:
+#### **Backend Routes**
+- **POST /transcribe-and-translate**: Receives the audio recording, performs transcription via OpenAI Whisper, translates the transcribed text using OpenAI, and returns the translation.
+- **POST /speak-translation**: Accepts the translated text and returns an audio file (MP3 format) of the translated text using **gTTS** (Google Text-to-Speech).
 
-* Flask for creating the API
-* requests for making HTTP requests to OpenAI API
-* openai for interacting with OpenAI's APIs
+### **AI Tools**
+- **OpenAI Whisper API**: Used to transcribe the recorded speech into text. This is done via OpenAI's powerful automatic speech recognition (ASR) model, Whisper.
+- **OpenAI GPT-4 or GPT-3.5 Models**: Used to translate the transcribed text into the target language. The translation can be customized based on the target language selected by the user.
+- **gTTS (Google Text-to-Speech)**: Converts the translated text into speech. This audio is returned to the frontend and played on the user's device.
 
-### Step 3: Set up your OpenAI API Key
+### **Security Considerations**
+- **Input Validation**: Ensure that input data (audio, language selection, etc.) is validated to prevent malicious code execution or invalid requests.
+- **Audio File Handling**: Securely handle the audio files processed by the backend to avoid memory issues or security vulnerabilities.
+- **Rate Limiting**: Consider applying rate limiting to API endpoints to prevent abuse or excessive usage of the services (e.g., OpenAI, gTTS).
+- **CORS**: Properly configure CORS (Cross-Origin Resource Sharing) for API requests from the frontend to the backend.
 
-Make sure you have a valid OpenAI API key. You can get one from the OpenAI API website.
-Set your API key in your environment variables:
+---
 
-**On macOS/Linux:**
+## **User Guide**
 
-```bash
-export OPENAI_API_KEY="your-api-key-here"
-```
+### **Features**
+- **Recording Audio**: Users can record their voice by clicking the "Start Recording" button. The audio is captured using the browser’s built-in microphone access.
+- **Transcription**: After recording is stopped, the app sends the audio to the backend, where it is transcribed using OpenAI’s Whisper model.
+- **Translation**: The transcribed text is then translated into the selected target language using OpenAI models.
+- **Speak Translation**: The translated text can be converted into speech and played back to the user through the "Speak" button.
 
-**On Windows:**
+### **Running the Application**
 
-```bash
-set OPENAI_API_KEY="your-api-key-here"
-```
+#### **Set Up the Backend**
+1. **Install Dependencies**:
+   You’ll need to install Flask, OpenAI API client, gTTS (Google Text-to-Speech), and other dependencies:
+   ```bash
+   pip install Flask openai gtts
+   ```
 
-Alternatively, you can directly modify the code to include the API key in place of `os.getenv("OPENAI_API_KEY")`.
+2. **Set Up OpenAI API**:
+   - You need an OpenAI account and API key. Set up the OpenAI API client by adding your API key:
+     ```bash
+     export OPENAI_API_KEY="your_openai_api_key"
+     ```
+   - Make sure your environment variables for OpenAI API credentials are properly configured.
 
-### Step 4: Run the Flask Server
+3. **Run the Flask Backend**:
+   To start the backend server, run:
+   ```bash
+   python app.py
+   ```
+   The Flask app will run on `http://127.0.0.1:5000`, and you’ll be able to interact with the frontend from this address.
 
-Start the Flask server by running the following command:
+#### **Set Up the Frontend**
+1. Ensure the **HTML**, **CSS**, and **JavaScript** files are correctly placed in the project structure.
+2. Open the `index.html` in your web browser to access the application. You can serve the frontend files using a local server or an IDE with a "Live Server" feature.
 
-```bash
-python app.py
-```
+#### **Test the App**
+1. Click **Start Recording** to record your voice.
+2. After stopping the recording, the transcription and translation will appear in their respective sections.
+3. Click **Speak** to play the translated text as audio.
 
-The server will be available at `http://127.0.0.1:5000` by default.
+### **Interacting with the App**
+- **Record**: Click the "Start Recording" button to begin recording audio. When you are done, click "Stop Recording".
+- **Transcription and Translation**: After the recording stops, the transcribed text is displayed, followed by the translated text.
+- **Speak**: After the translation is displayed, click the "Speak" button to hear the translation in audio form.
 
-### Step 5: Testing the API
+---
 
-You can test the API by sending a POST request to `/transcribe-and-translate`. The request should include an audio file and optionally a target language (default is Spanish).
+## **License**
+This project is licensed under the GNU v3.0 License - see the [LICENSE](LICENSE) file for details.
 
-**Example Request:**
-
-```bash
-curl -X 'POST' \
-  'http://127.0.0.1:5000/transcribe-and-translate' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: multipart/form-data' \
-  -F 'audio=@your-audio-file.wav' \
-  -F 'target_language=es'
-```
-
-**Example Response:**
-
-```json
-{
-  "transcription": "This is the transcribed text from the audio.",
-  "translation": "Este es el texto traducido al español."
-}
-```
-
-**Available Endpoints**
-
-* `GET /`: Returns a simple "Hello, World!" message for testing.
-* `POST /transcribe-and-translate`: Accepts an audio file and returns the transcription and translation. The target language can be specified as a form parameter (`target_language`).
-
-**API Documentation**
-
-`/transcribe-and-translate`
-
-**Request**
-
-* Method: POST
-* Content-Type: multipart/form-data
-
-**Parameters**
-
-* `audio`: The audio file to be transcribed and translated.
-* `target_language` (optional): The language into which the transcription will be translated. Default is `es` (Spanish).
-
-**Response**
-
-* Status: 200 OK
-* Content-Type: application/json
-
-**Body:**
-
-```json
-{
-  "transcription": "This is the transcribed text from the audio.",
-  "translation": "Este es el texto traducido al español."
-}
-```
-
-**Errors:**
-
-* `400 Bad Request`: If no audio file is provided.
-* `500 Internal Server Error`: If transcription or translation fails.
-
+---
