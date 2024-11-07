@@ -1,0 +1,101 @@
+/* General body styling */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+    padding: 10px;
+}
+
+/* Container styling */
+.container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 600px;
+    gap: 20px;
+    box-sizing: border-box;
+}
+
+/* Column styling for larger screens */
+.columns {
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+}
+
+/* Column elements */
+.column {
+    flex: 1;
+    padding: 15px;
+    box-sizing: border-box;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+/* Buttons and inputs styling */
+button,
+select {
+    padding: 10px;
+    font-size: 16px;
+    margin: 10px 0;
+    cursor: pointer;
+    width: 100%;
+    border: none;
+    border-radius: 5px;
+}
+
+/* Button color variations */
+#recordButton {
+    background-color: green;
+    color: white;
+}
+
+#speakButton {
+    background-color: green;
+    color: white;
+}
+
+#stopButton {
+    background-color: red;
+    color: white;
+}
+
+/* Disable button styling */
+#stopButton:disabled,
+#recordButton:disabled,
+#speakButton:disabled {
+    background-color: gray;
+    cursor: not-allowed;
+}
+
+/* Language selection dropdown styling */
+.language-selection {
+    font-size: 16px;
+}
+
+/* Responsive adjustments for mobile devices */
+@media (max-width: 768px) {
+    .container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    .columns {
+        flex-direction: column;
+    }
+
+    button,
+    select {
+        width: 100%;
+        font-size: 14px;
+    }
+
+    .column h3 {
+        font-size: 18px;
+    }
+}
