@@ -1,12 +1,12 @@
 import os
 import requests
 import tempfile
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file 
 from flask_cors import CORS
 import openai
-from werkzeug.middleware.dispatcher import DispatcherMiddleware
-from werkzeug.serving import run_simple
+from io import BytesIO
 import traceback
+from gtts import gTTS
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 
@@ -14,6 +14,7 @@ app = Flask(__name__)
 CORS(app)
 
 client = openai.OpenAI()
+
 
 def transcribe_audio(audio):
     # Create a temporary file for the audio data
@@ -81,10 +82,53 @@ def transcribe_and_translate():
         # Transcribe and then translate
         transcription = transcribe_audio(audio_file)
         print("Transcription:", transcription)
+        print("Target Language:", target_language)
         translation = translate_text(transcription, target_language)  # Specify the target language
         print("Translation:", translation)
         return jsonify({"transcription": transcription, "translation": translation})
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+
+def generate_audio(text, target_language):
+    """Generate audio from translated text."""
+    # Use gTTS to generate audio from the translated text
+    tts = gTTS(text, lang=target_language)  # Change 'es' to the target language code
+    
+    # Save the audio to a temporary file on disk
+    temp_filename = tempfile.mktemp(suffix=".mp3")
+    tts.save(temp_filename)
+    
+    # Read the temporary file into BytesIO
+    audio_file = BytesIO()
+    with open(temp_filename, 'rb') as f:
+        audio_file.write(f.read())
+    
+    # Clean up the temporary file
+    os.remove(temp_filename)
+    
+    # Return the audio file in-memory as BytesIO
+    audio_file.seek(0)
+    return audio_file
+
+
+@app.route('/speak-translation', methods=['POST'])
+def speak_translation():
+    # Get the translated text from the request
+    data = request.get_json()
+    translation_text = data.get('text', '')
+    target_language = data.get('target_language', 'en')
+
+    # Generate audio from translation text
+    audio = generate_audio(translation_text,target_language)
+
+    # Send the audio back as a response
+    return send_file(
+        audio,
+        as_attachment=True,
+        download_name="translated_audio.mp3",
+        mimetype="audio/mpeg"
+    )
+
 

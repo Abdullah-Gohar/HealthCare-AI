@@ -1,86 +1,84 @@
 let mediaRecorder;
 let audioChunks = [];
-const speakButton = document.getElementById('speakButton');
-const stopButton = document.getElementById('stopButton');
-const transcriptionDisplay = document.getElementById('transcriptionDisplay');
-const translationDisplay = document.getElementById('translationDisplay');
-const targetLanguageSelect = document.getElementById('targetLanguage'); // New target language dropdown
 
-console.log("JavaScript loaded");
+const recordBtn = document.getElementById('recordButton');
+const stopBtn = document.getElementById('stopButton');
+const speakBtn = document.getElementById('speakButton');
+const transcriptionElement = document.getElementById('transcriptionDisplay');
+const translationElement = document.getElementById('translationDisplay');
 
-// Start recording when the 'Start Recording' button is pressed
-speakButton.addEventListener('click', async () => {
+const targetLanguageSelect = document.getElementById('targetLanguage');
+
+// Start recording when Record button is clicked
+recordBtn.onclick = async () => {
+    transcriptionElement.innerText = 'Your transcription will appear here.';
+    translationElement.innerText = 'Your translation will appear here.';
+    audioChunks = [];
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = event => {
+        audioChunks.push(event.data);
+    };
+
+    mediaRecorder.onstop = () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+        sendAudioForProcessing(audioBlob);
+    };
+
+    mediaRecorder.start();
+    recordBtn.disabled = true;
+    stopBtn.disabled = false;
+};
+
+// Stop recording when Stop button is clicked
+stopBtn.onclick = () => {
+    mediaRecorder.stop();
+    recordBtn.disabled = false;
+    stopBtn.disabled = true;
+};
+
+// Send audio file to the backend for transcription and translation
+async function sendAudioForProcessing(audioBlob) {
+    const formData = new FormData();
+    formData.append('audio', audioBlob);
+    formData.append('target_language', targetLanguageSelect.value);
+
     try {
-        console.log("Starting recording...");
+        const response = await fetch('https://healthcareaibackend.vercel.app/transcribe-and-translate', {
+            method: 'POST',
+            body: formData,
+        });
 
-        // Request microphone access
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        mediaRecorder = new MediaRecorder(stream);
-
-        audioChunks = [];  // Reset audio chunks
-
-        mediaRecorder.ondataavailable = (event) => {
-            console.log("Data available from recorder");
-            audioChunks.push(event.data);
-        };
-
-        mediaRecorder.onstop = async () => {
-            console.log("Recording stopped, processing audio...");
-
-            // Combine audio chunks into a single Blob
-            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-
-            // Log to confirm Blob creation
-            console.log("Audio Blob created:", audioBlob);
-
-            // Get the target language from the dropdown
-            const targetLanguage = targetLanguageSelect.value;
-
-            // Send audio and target language to backend
-            const formData = new FormData();
-            formData.append('audio', audioBlob);
-            formData.append('target_language', targetLanguage);
-
-            try {
-                console.log("Sending audio and target language to backend...");
-                const response = await fetch('https://healthcareaibackend.vercel.app/transcribe-and-translate', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.ok) {
-                    const result = await response.json();
-                    transcriptionDisplay.textContent = result.transcription;
-                    translationDisplay.textContent = result.translation;
-                } else {
-                    console.error("Error in response:", response.statusText);
-                    transcriptionDisplay.textContent = "Transcription failed";
-                }
-            } catch (error) {
-                console.error("Error sending audio:", error);
-                transcriptionDisplay.textContent = "Error connecting to server";
-            }
-        };
-
-        mediaRecorder.start();
-        console.log("Recording started");
-
-        // Disable the record button during recording
-        speakButton.disabled = true;
-        stopButton.disabled = false;
+        if (response.ok) {
+            const data = await response.json();
+            transcriptionElement.innerText = data.transcription;
+            translationElement.innerText = data.translation;
+            speakBtn.disabled = false; // Enable speak button after translation
+        } else {
+            alert('Error processing audio');
+        }
     } catch (error) {
-        console.error("Error starting recording:", error);
-        alert("Could not access microphone. Please check your permissions.");
+        console.error(error);
+        alert('Error sending audio to backend');
     }
-});
+}
 
-// Stop recording when the 'Stop Recording' button is pressed
-stopButton.addEventListener('click', () => {
-    if (mediaRecorder && mediaRecorder.state !== "inactive") {
-        mediaRecorder.stop();
-        console.log("Recording stopped");
+// Send translation to the backend to generate and play audio
+speakBtn.onclick = async () => {
+    const translationText = translationElement.innerText;
+
+    const response = await fetch('https://healthcareaibackend.vercel.app/speak-translation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: translationText, target_language: targetLanguageSelect.value }),
+    });
+
+    if (response.ok) {
+        const audioBlob = await response.blob();
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        audio.play();
+    } else {
+        alert('Error generating speech');
     }
-    // Re-enable the buttons after stopping
-    speakButton.disabled = false;
-    stopButton.disabled = true;
-});
+};
